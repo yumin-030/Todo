@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>to do list</title>
+    <link rel="stylesheet" href="./reset_.css">
+    <link rel="stylesheet" href="./todo.css">
+</head>
+<body>
+    <div class="images"></div>
+    <div class="wrap">
+        <div class="top">
+            <p><span></span>의 To Do List★</p>
+            <div id="here">
+                <span class="location"></span>
+                <img src="" alt="">
+                <span class="weather"></span>
+            </div>
+        </div>
+        <div class="days">
+            <p><span class="year"></span>년</p>
+            <p><span class="month"></span>월</p>
+            <p><span class="date"></span>일</p>
+        </div>
+        <div class="clock">
+            <span class="h">00</span> : <span class="m">00</span> <b> : </b>
+            <span class="s">00</span>
+        </div>
+        <div class="list">
+            <h2>To Do List</h2>
+            <ul></ul>
+        </div>
+        <div class="bottom">
+            <ul>
+                <li class="change">User Change</li>
+                <li class="add_list">Add List</li>
+            </ul>
+        </div>
+        <div class="user_name">
+            <p>이름을 입력하세요</p>
+            <button class="del"><img src="./images/multiply.png" alt="닫기"></button>
+            <form>
+                <input type="text" name="userName" id="userName">
+                <button>입력</button>
+            </form>
+        </div>
+        <div class="user_list">
+            <p>할 일을 입력하세요</p>
+            <button class="del_2"><img src="./images/multiply.png" alt="닫기"></button>
+            <form>
+                <input type="text" name="userList" id="userList">
+                <button>입력</button>
+            </form>
+        </div>
+    </div>
+    
+<script>
+    let imgList = [];
+    for(i = 0; i <= 7; i++){
+        if(i != 0){
+            imgList.push(`./images/bg${i}.jpg`);
+        }
+    }
+    let rndIndex = Math.floor(Math.random() * imgList.length);
+    document.querySelector('.images').style.backgroundImage = `url(${imgList[rndIndex]})`;
+
+    function getSuccess(pos){
+        let lat = pos.coords.latitude;
+        let lon = pos.coords.longitude;
+        let key = '018766110b9d22e46197a083727d9060';
+        let url = `https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&lang=kr&appid=${key}&units=metric`;
+        fetch(url).then((response) => response.json()).then((data) => {
+            let city = data.name;
+            let weather = data.weather[0].main;
+            let temp = data.main.temp;
+            let icon = data.weather[0].icon;
+            document.querySelector('.location').innerText = city;
+            document.querySelector('.weather').innerHTML = `${weather}&nbsp&nbsp&nbsp&nbsp${temp}˚C`;
+            document.querySelector('img').src = `http://openweathermap.org/img/w/${icon}.png`;
+        })
+    }
+    function getError(){
+        document.querySelector('#weather').innerHTML = `<span>날씨를 불러올 수 없습니다.</span>`;
+    }
+    navigator.geolocation.getCurrentPosition(getSuccess, getError);
+
+    calendar();
+    function calendar(){
+        let now = new Date();
+        let year = now.getFullYear();
+        let month = now.getMonth();
+        let date = now.getDate();
+        document.querySelector('.year').innerHTML = year;
+        document.querySelector('.month').innerHTML = month + 1;
+        document.querySelector('.date').innerHTML = date + 1;
+    }
+    let time = setInterval(function(){
+        let now = new Date();
+        let hour = now.getHours();
+        let min = now.getMinutes();
+        let sec = now.getSeconds();
+        document.querySelector('.h').innerHTML = hour.toString().padStart(2,'0');
+        document.querySelector('.m').innerHTML = min.toString().padStart(2,'0');
+        document.querySelector('.s').innerHTML = sec.toString().padStart(2,'0');
+    }, 1000);
+
+    let user = '';
+    let savedName = localStorage.getItem('userName');
+    document.querySelector('.top span').innerText = savedName;
+    document.querySelector('.change').onclick = function(){
+        document.querySelector('.user_list').style.display = 'none';
+        document.querySelector('.user_name').style.display = 'block';
+        document.querySelector('#userName').focus();
+        document.querySelector('.del').onclick = function(){
+            document.querySelector('.user_name').style.display = 'none';
+        }
+        document.querySelector('.user_name > form > button').onclick = function(){
+            user = document.querySelector('#userName').value;
+            if(user != ''){
+                document.querySelector('.top > p > span').innerText = user;
+                localStorage.setItem('userName', user);
+                document.querySelector('#userName').value = '';
+                document.querySelector('.user_name').style.display = 'none';
+            } else {
+                document.querySelector('.user_name').style.display = 'none';
+            }
+            return false;
+        }
+    }
+
+    let listMenu = '';
+    document.querySelector('.add_list').onclick = function(){
+        document.querySelector('.user_name').style.display = 'none';
+        document.querySelector('.user_list').style.display = 'block';
+        document.querySelector('#userList').focus();
+        document.querySelector('.del_2').onclick = function(){
+            document.querySelector('.user_list').style.display = 'none';
+        }
+
+        document.querySelector('.user_list > form > button').onclick = function(){
+            listMenu = document.querySelector('#userList').value;
+            if(listMenu != ''){
+                let liTag = document.createElement('li');
+                let spanTag = document.createElement('span');
+                let listText = document.createTextNode(listMenu);
+                spanTag.append(listText);
+                let delBtn = document.createElement('button');
+                let imgTag = document.createElement('img');
+                delBtn.classList.add('remove');
+                imgTag.setAttribute('src', './images/free-icon-paw-8347745.png')
+                delBtn.append(imgTag);
+                liTag.append(spanTag);
+                liTag.append(delBtn);
+                document.querySelector('.list > ul').prepend(liTag);
+                document.querySelector('#userList').value = '';
+                document.querySelector('#userList').focus();
+                
+                let removeBtn = document.querySelectorAll('.remove');
+                for(i = 0; i < removeBtn.length; i++){
+                    removeBtn[i].addEventListener('click',function(){ 
+                        document.querySelector('#userList').focus();
+                        this.parentNode.remove();
+                    }) 
+                    removeBtn[i].addEventListener('mousedown', function(){
+                        document.querySelector('#userList').focus();
+                        this.parentNode.style.opacity = '0.3';
+                    })
+                    removeBtn[i].addEventListener('mousemove', function(){
+                        document.querySelector('#userList').focus();
+                        this.parentNode.style.opacity = '1';
+                    })
+                }
+            } else {
+                document.querySelector('.user_list').style.display = 'none';
+            }
+            return false;
+        }
+    }
+</script>    
+</body>
+</html>
